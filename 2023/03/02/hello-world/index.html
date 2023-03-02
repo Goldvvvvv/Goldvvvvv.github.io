@@ -50,6 +50,14 @@
   <nav class="site-navigation">
     <ul>
       
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+        <li><a href="/categories">Categories</a></li>
+      
+        <li><a href="/tags">Tags</a></li>
+      
     </ul>
   </nav>
 </header>
@@ -112,6 +120,24 @@
 </article>
 
   
+	<section id="comment" class="comment">
+		<div id="gitalk-container"></div>
+	</section>
+	<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+	<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+	<script>
+		var gitalk = new Gitalk({
+			clientID: 'f5443e252d8abedf911b',
+			clientSecret: '8c6f1bececf06f359eb0f55d185db339648f6475',
+			repo: 'ttps://github.com/Goldvvvvv/zklw-.git',
+			owner: 'f5443e252d8abedf911b',
+			admin: [''],
+			id: location.pathname,
+			distractionFreeMode: false
+		})
+		gitalk.render('gitalk-container')
+	</script>
+
 
 
 
