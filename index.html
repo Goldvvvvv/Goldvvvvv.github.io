@@ -201,8 +201,7 @@
 <p>new_value);</p>
 <p>简单的来说就是 update(目标xml类容，xml文档路径，更新的内容)我们在xml文档路径的位置写入了子查询，和特殊字符拼接在一起，因为不符合输入路径规则然后报错，先执行了子查询我们可以得到库名。0x7e是16进制里面的“~”，是一个特殊符号，不符合路径规则报错</p>
 
-<p>eg:</p>
-<p><code>select \* from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)</code></p>
+<p>eg:<br><code>select \* from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)</code></p>
 <p><em>0x7e是一个~符号</em></p>
 <p><a name="133b38a9"></a></p>
 <h6 id="1-extractvalue-报错"><a href="#1-extractvalue-报错" class="headerlink" title="1. extractvalue()报错"></a>1. extractvalue()报错</h6><p> extractvalue()作用:对XML文档进行查询，相当于在HTML文件中用标签查找元素。<br>语法: extractvalue(XML_document, XPath_string )<br>参数1: XML_document是String格式，为XML文档对象的名称<br>参数2: XPath_string (Xpath格式的字符串)，注入时可操作的地方<br>参数1: XML_document是String格式，为XML文档对象的名称<br>参数2: XPath_string (Xpath格式的字符串)，注入时可操作的地方<br><strong>eg:select extractvalue(1,concat(’ ~ ‘,user()));</strong><br>之后的可以和联合注入一样</p>
